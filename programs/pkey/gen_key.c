@@ -190,6 +190,45 @@ static int write_private_key( mbedtls_pk_context *key, const char *output_file )
     return( 0 );
 }
 
+static int write_public_key( mbedtls_pk_context *key, const char *output_file )
+{
+    int ret;
+    FILE *f;
+    unsigned char output_buf[16000];
+    unsigned char *c = output_buf;
+    size_t len = 0;
+
+    memset(output_buf, 0, 16000);
+    if( opt.format == FORMAT_PEM )
+    {
+        if( ( ret = mbedtls_pk_write_pubkey_pem( key, output_buf, 16000 ) ) != 0 )
+            return( ret );
+
+        len = strlen( (char *) output_buf );
+    }
+    else
+    {
+        if( ( ret = mbedtls_pk_write_pubkey_der( key, output_buf, 16000 ) ) < 0 )
+            return( ret );
+
+        len = ret;
+        c = output_buf + sizeof(output_buf) - len;
+    }
+
+    if( ( f = fopen( output_file, "wb" ) ) == NULL )
+        return( -1 );
+
+    if( fwrite( c, 1, len, f ) != len )
+    {
+        fclose( f );
+        return( -1 );
+    }
+
+    fclose( f );
+
+    return( 0 );
+}
+
 int main( int argc, char *argv[] )
 {
     int ret = 1;
@@ -205,6 +244,7 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_ECP_C)
     const mbedtls_ecp_curve_info *curve_info;
 #endif
+    char public_file_name[64];
 
     /*
      * Set to sane values
@@ -412,6 +452,13 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "  . Writing key to file..." );
 
     if( ( ret = write_private_key( &key, opt.filename ) ) != 0 )
+    {
+        mbedtls_printf( " failed\n" );
+        goto exit;
+    }
+
+    snprintf(public_file_name, 64, "public-%s", opt.filename);
+    if( ( ret = write_public_key( &key, public_file_name ) ) != 0 )
     {
         mbedtls_printf( " failed\n" );
         goto exit;

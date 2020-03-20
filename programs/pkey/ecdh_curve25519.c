@@ -27,6 +27,7 @@
 
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
+#include "mbedtls/ecdh.h"
 #else
 #include <stdio.h>
 #include <stdlib.h>
