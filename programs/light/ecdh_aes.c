@@ -253,18 +253,18 @@ int node_encrypt(node_t* node,
                  const unsigned char* inbuff, size_t ilen,
                  unsigned char* outbuff, size_t* olen)
 {
-    uint32_t count = 0;
     int i;
+    int ret = -1;
+    uint32_t count = 0;
+    uint32_t offset;
     size_t blocklen;
+    size_t encrypted_buff_len;
     unsigned char IV[16];
     unsigned char digest[MBEDTLS_MD_MAX_SIZE] = {0};
     unsigned char key[512] = {0};
-    int ret = -1;
+    unsigned char encrypted_buff[1024];
     const mbedtls_cipher_info_t *cipher_info;
     const mbedtls_md_info_t *md_info;
-    uint32_t offset;
-    unsigned char encrypted_buff[1024];
-    size_t encrypted_buff_len;
 
     node_gen_IV(node, IV, sizeof(IV));
 
